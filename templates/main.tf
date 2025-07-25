@@ -8,3 +8,5 @@ module "vm" {
   private-ip-name = var.private-ip-name
   vmname = var.vmname
 }
+
+
