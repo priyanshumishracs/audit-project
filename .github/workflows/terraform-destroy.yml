@@ -1,7 +1,12 @@
-name: Terraform Destroy
+name: Destroy Terraform Infra
 
 on:
-  workflow_dispatch:  # manually trigger from GitHub UI
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to destroy (dev/test/prod)'
+        required: true
+        default: 'dev'
 
 env:
   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -14,11 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./templates  # adjust path as needed
-
-    strategy:
-      matrix:
-        environment: [dev, test, prod]  # destroy only the one you manually pick
+        working-directory: ./templates
 
     steps:
       - name: Checkout code
@@ -31,7 +32,13 @@ jobs:
         run: terraform init
 
       - name: Select Workspace
-        run: terraform workspace select ${{ matrix.environment }}
+        run: terraform workspace select -or-create ${{ github.event.inputs.environment }}
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -input=false
+        
+      - name: Select Workspace
+        run: terraform workspace select -or-create ${{ github.event.inputs.environment }}
 
       - name: Destroy Infrastructure
         run: terraform destroy -auto-approve -input=false
