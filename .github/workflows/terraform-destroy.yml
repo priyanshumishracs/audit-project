@@ -1,0 +1,37 @@
+name: 'Terraform Destroy Azure Infra'
+
+on:
+  workflow_dispatch:  # 👈 Allows manual trigger from GitHub UI
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+jobs:
+  terraform-destroy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./templates  # update if your TF files are in another folder
+
+    strategy:
+      matrix:
+        environment: [dev, test, prod]  # will destroy from all workspaces
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Select Workspace
+        run: terraform workspace select ${{ matrix.environment }}
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -input=false
