@@ -39,16 +39,21 @@ resource "azurerm_network_interface" "example" {
 
 }
 
+data "template_file" "web_user-data" {
+  template = file("${path.module}/script.sh")
+}
+
 resource "azurerm_linux_virtual_machine" "example" {
   name                = "${terraform.workspace}-linuxvm"
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
-  size                = "Standard_F2"
+  size                = "Standard_B1s"
   admin_username      = "adminuser"
   admin_password      = "P@$$w0rd1234!"
+   custom_data = base64encode(data.template_file.web_user-data.rendered)
   disable_password_authentication = false
 
-  network_interface_ids = [
+  network_interface_ids = [ 
     azurerm_network_interface.example.id,
   ]
 
